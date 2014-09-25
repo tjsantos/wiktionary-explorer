@@ -8,17 +8,18 @@ class TestParser(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """set up wikitext examples with expected output for each parser step
-        wikitext['word']
-        wikitext['text'] -- full wikitext
-        wikitext['lang'] -- only the language section
-        wikitext['pron'] -- only the pronunciation section of the language
+        example['word']
+        example['text'] -- full wikitext
+        example['lang'] -- only the language section
+        example['pron'] -- only the pronunciation section of the language
                             section
-        wikitext['ipa'] -- only the extracted ipa
+        example['ipa'] -- only the extracted ipa
         """
-        cls.wikitext = {}
-        with open('test/wikitext_example.json', 'r', encoding='utf-8') as f:
-            cls.wikitext = json.load(f)[0]
+        # cls.examples = [{'word': 'foo', 'text': ... }, {'word': ...]
+        with open('test/wikitext_examples.json', 'r', encoding='utf-8') as f:
+            cls.examples = json.load(f)
 
+    @unittest.skip('will not be using for a while')
     def test_xml_to_wikitext(self):
         test_xml_file = 'test/small.xml'
         test_out = 'test/test.tmp'
@@ -28,18 +29,24 @@ class TestParser(unittest.TestCase):
         self.assertEqual(words_found, words_expected)
 
     def test_extract_language_section(self):
-        english_section = get_english(self.wikitext['text'])
-        # assertion to fail on length first, as the string output is long
-        self.assertEqual(len(english_section), len(self.wikitext['lang']))
-        self.assertEqual(english_section, self.wikitext['lang'])
+        for example in self.examples:
+            with self.subTest(word=example['word']):
+                english = get_english(example['text'])
+                # assert to fail on length first, as the string output is long
+                self.assertEqual(len(english), len(example['lang']))
+                self.assertEqual(english, example['lang'])
 
     def test_extract_pronunciation_section(self):
-        pron = get_pronunciation(self.wikitext['lang'])
-        self.assertEqual(pron, self.wikitext['pron'])
+        for example in self.examples:
+            with self.subTest(word=example['word']):
+                pron = get_pronunciation(example['lang'])
+                self.assertEqual(pron, example['pron'])
 
     def test_extract_ipa(self):
-        ipa = get_ipa(self.wikitext['pron'])
-        self.assertEqual(sorted(ipa), sorted(self.wikitext['ipa']))
+        for example in self.examples:
+            with self.subTest(word=example['word']):
+                ipa = get_ipa(example['pron'])
+                self.assertEqual(sorted(ipa), sorted(example['ipa']))
 
 if __name__ == '__main__':
     unittest.main()
