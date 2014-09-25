@@ -5,8 +5,8 @@ import os
 class TestParser(unittest.TestCase):
 
     def test_xml_to_wikitext(self):
-        test_xml_file = 'small.xml'
-        test_out = 'test.tmp'
+        test_xml_file = 'test/small.xml'
+        test_out = 'test/test.tmp'
         words_found = parse_xml_to_json(test_xml_file, test_out)
         os.remove(test_out)
         words_expected = 19
