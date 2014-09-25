@@ -51,7 +51,7 @@ def parse_xml_to_json(infile, outfile):
     print('errors:', errors)
     return len(words)
 
-def get_english_section(wikitext):
+def get_english(wikitext):
     # split by sections with header ==TITLE==
     regex = r'(^==[^=]+==$)'
     results = re.split(regex, wikitext, flags=re.MULTILINE)
@@ -64,8 +64,17 @@ def get_english_section(wikitext):
         english_section = None
     return english_section
 
-def get_pronunciation_section(wikitext):
-    pass
+def get_pronunciation(wikitext):
+    regex = r'(^===[^=]+===$)'
+    results = re.split(regex, wikitext, flags=re.MULTILINE)
+    # find the section for English and save the result
+    for i, res in enumerate(results):
+        if res == '===Pronunciation===':
+            pronunciation = results[i] + results[i+1]
+            break
+    else:
+        pronunciation = None
+    return pronunciation
 
 def get_ipa(wikitext):
     pass

@@ -28,13 +28,14 @@ class TestParser(unittest.TestCase):
         self.assertEqual(words_found, words_expected)
 
     def test_extract_language_section(self):
-        english_section = get_english_section(self.wikitext['text'])
+        english_section = get_english(self.wikitext['text'])
         # assertion to fail on length first, as the string output is long
         self.assertEqual(len(english_section), len(self.wikitext['lang']))
         self.assertEqual(english_section, self.wikitext['lang'])
 
     def test_extract_pronunciation_section(self):
-        pass
+        pron = get_pronunciation(self.wikitext['lang'])
+        self.assertEqual(pron, self.wikitext['pron'])
 
     def test_extract_ipa(self):
         pass
