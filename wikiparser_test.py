@@ -38,7 +38,8 @@ class TestParser(unittest.TestCase):
         self.assertEqual(pron, self.wikitext['pron'])
 
     def test_extract_ipa(self):
-        pass
+        ipa = get_ipa(self.wikitext['pron'])
+        self.assertEqual(sorted(ipa), sorted(self.wikitext['ipa']))
 
 if __name__ == '__main__':
     unittest.main()

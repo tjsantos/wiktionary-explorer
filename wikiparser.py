@@ -77,7 +77,14 @@ def get_pronunciation(wikitext):
     return pronunciation
 
 def get_ipa(wikitext):
-    pass
+    """return a list of IPA's found"""
+    results = re.findall(r'/[^/]+/', wikitext)
+    # remove duplicates before returning
+    ipa_list = []
+    for ipa in results:
+        if ipa not in ipa_list:
+            ipa_list.append(ipa)
+    return ipa_list
 
 if __name__ == '__main__':
     import sys
