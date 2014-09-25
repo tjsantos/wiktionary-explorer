@@ -65,6 +65,7 @@ def get_english(wikitext):
     return english_section
 
 def get_pronunciation(wikitext):
+    """return the first pronunciation section found"""
     regex = r'(^===[^=]+===\s*$)'
     results = re.split(regex, wikitext, flags=re.MULTILINE)
     # find the section for English and save the result
@@ -78,7 +79,9 @@ def get_pronunciation(wikitext):
 
 def get_ipa(wikitext):
     """return a list of IPA's found"""
-    results = re.findall(r'/[^/]+/', wikitext)
+    reg1 = r'/[^/]+/' # match /slashes/ (phonemic transcriptions)
+    # reg2 = r'\[[^\]]+\]' # match [brackets] (phonetic transcriptions)
+    results = re.findall(reg1, wikitext)
     # remove duplicates before returning
     ipa_list = []
     for ipa in results:

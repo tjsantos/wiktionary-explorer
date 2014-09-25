@@ -43,10 +43,20 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(pron, example['pron'])
 
     def test_extract_ipa(self):
+        # from full english wordlist: 32028 with ipa, 12806 without
         for example in self.examples:
             with self.subTest(word=example['word']):
                 ipa = get_ipa(example['pron'])
                 self.assertEqual(sorted(ipa), sorted(example['ipa']))
+
+        ## future possibility: match [brackets] for phonetic transcriptions
+        ## as opposed to just the phonemic transcriptions within /slashes/
+        # with self.subTest(word='accend'):
+        #     pron = ("===Pronunciation===\n"
+        #             "* {{IPA|[\u00e6k\u02c8s\u025bnd]|lang=en}}\n\n")
+        #     ipa = "[[\u00e6k\u02c8s\u025bnd]]"
+        #     self.assertEqual(get_ipa(pron), ipa)
+
 
 if __name__ == '__main__':
     unittest.main()
