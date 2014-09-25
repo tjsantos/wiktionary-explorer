@@ -4,6 +4,15 @@ import os
 
 class TestParser(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.wikitext = {}
+        with open('wikitext_example', 'r', encoding='utf-8') as f:
+            cls.wikitext['full'] = f.readline()
+            cls.wikitext['lang'] = f.readline()
+            cls.wikitext['pron'] = f.readline()
+            cls.wikitext['ipa'] = f.readline()
+
     def test_xml_to_wikitext(self):
         test_xml_file = 'test/small.xml'
         test_out = 'test/test.tmp'
@@ -12,7 +21,10 @@ class TestParser(unittest.TestCase):
         words_expected = 19
         self.assertEqual(words_found, words_expected)
 
-    def test_extract_wikitext_section(self):
+    def test_extract_language_section(self):
+        pass
+
+    def test_extract_pronunciation_section(self):
         pass
 
     def test_extract_ipa(self):
