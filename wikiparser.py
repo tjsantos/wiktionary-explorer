@@ -10,16 +10,13 @@ def parse_xml_to_json(infile, outfile):
         import json
         return json.dumps({'word': word, 'text': text})
 
-    f = infile
-    elems = ET.iterparse(f)
     ns = '{http://www.mediawiki.org/xml/export-0.9/}'
 
     errors = []
     words = []
-    n = 0
     with open(outfile, 'w', encoding='utf-8') as out:
         out.write('[\n')
-        for event, elem in ET.iterparse(f):
+        for event, elem in ET.iterparse(infile):
             # unexpected event
             if event != 'end':
                 err = 'unknown event: ' + event
@@ -35,10 +32,8 @@ def parse_xml_to_json(infile, outfile):
                 print(err)
                 errors.append(err)
 
-            #print(i, tag, elem.text[:20] if elem.text else None)
             # obtain words
             if tag == 'page':
-                n += 1
                 # words are assumed to have ns = 0
                 if elem.find(ns+'ns').text == '0':
                     word = elem.find('./{0}title'.format(ns)).text
@@ -49,12 +44,10 @@ def parse_xml_to_json(infile, outfile):
                 # clear page from memory
                 recursive_clear(elem)
 
-            #if n % 100000 == 0:
-            #    print(n, len(words))
         out.write(make_json('', ''))
         out.write('\n]')
-    print(len(words))
-    print(errors)
+    print('words found:', len(words))
+    print('errors:', errors)
     return len(words)
 
 

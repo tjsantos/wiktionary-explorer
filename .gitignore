@@ -45,6 +45,8 @@ Temporary Items
 enwiktionary-20140908-pages-meta-current.xml.bz2
 enwiktionary-20140908-pages-meta-current.xml
 small.json
-small.xml
 words_english.json
 words_unparsed.json
+
+*.pyc
+*.swp
