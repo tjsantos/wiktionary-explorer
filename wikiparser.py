@@ -88,7 +88,8 @@ def get_ipa(wikitext):
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) < 3:
-        raise RuntimeError('Expected 2 arguments: infile and outfile.')
-    infile, outfile = sys.argv[1:3]
-    parse_xml_to_json(infile, outfile)
+    if len(sys.argv) != 3:
+        print('Expected 2 arguments: infile and outfile.')
+    else:
+        infile, outfile = sys.argv[1:3]
+        parse_xml_to_json(infile, outfile)
