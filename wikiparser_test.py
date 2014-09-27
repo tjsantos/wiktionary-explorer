@@ -19,7 +19,7 @@ class TestParser(unittest.TestCase):
         with open('test/wikitext_examples.json', 'r', encoding='utf-8') as f:
             cls.examples = json.load(f)
 
-    @unittest.skip('will not be using for a while')
+    @unittest.skip('will not be using until refactor or next data dump')
     def test_xml_to_wikitext(self):
         test_xml_file = 'test/small.xml'
         test_out = 'test/test.tmp'
@@ -48,6 +48,39 @@ class TestParser(unittest.TestCase):
             with self.subTest(word=example['word']):
                 ipa = get_ipa(example['pron'])
                 self.assertEqual(sorted(ipa), sorted(example['ipa']))
+        with self.subTest(word='oxypnictide'):
+            pron = "===Pronunciation===\nOXEE-nick-tyde <ref> Space Daily; [http://www.spacedaily.com/reports/Quantum_criticality_observed_in_new_class_of_materials_999.html \"Quantum criticality observed in new class of materials\"]; 5 June 2014 </ref>\n\n"
+            ipa = get_ipa(pron)
+            self.assertEqual(sorted(ipa), [])
+        # catch the 4 correct IPA but neither the link, nor embedded note IPA
+        with self.subTest(word='adversary'):
+            pron = "===Pronunciation===\n* {{a|UK}} {{IPA|/\u02c8\u00e6d.v\u0259.s(\u0259)\u0279i/|lang=en}}<ref>[http://dictionary.cambridge.org/define.asp?key=1216&amp;dict=CALD Cambridge Advanced Learner's Dictionary]</ref>\n* {{a|UK}} {{IPA|/\u02c8\u00e6d.v\u0259.s\u025b\u0279i/|lang=en}}<ref>According to UK audio file in Longman Exams Dictionary, even though IPA given in dictionary is /\u02c8\u00e6d.v\u0259.s(\u0259)\u0279i\u02d0/</ref>\n* {{a|UK}} {{IPA|/\u00e6d\u02c8v\u025c\u02d0.s\u0259.\u0279i/|lang=en}}\n* {{a|US}} {{IPA|/\u02c8\u00e6d.v\u0259\u0279.s\u025b\u0279i/|lang=en}}\n* {{audio|en-us-adversary.ogg|Audio (US)|lang=en}}\n\n"
+            ipa_list = get_ipa(pron)
+            expected = ["/\u02c8\u00e6d.v\u0259.s(\u0259)\u0279i/",
+                        "/\u02c8\u00e6d.v\u0259.s\u025b\u0279i/",
+                        "/\u00e6d\u02c8v\u025c\u02d0.s\u0259.\u0279i/",
+                        "/\u02c8\u00e6d.v\u0259\u0279.s\u025b\u0279i/"]
+            self.assertEqual(ipa_list, expected)
+        # extra section between IPA label and actual IPA
+        with self.subTest(word='mishap'):
+            pron = "===Pronunciation===\n* {{IPA|lang=en|/\u02c8m\u026as.h\u00e6p/}}\n\n"
+            ipa_list = get_ipa(pron)
+            expected = ["/\u02c8m\u026as.h\u00e6p/"]
+            self.assertEqual(ipa_list, expected)
+        # word: hoping
+        with open('words_with_ipa1.json', 'r', encoding='utf-8') as f:
+            ipa1_list = json.load(f)
+        ipa1_dict = {w['word']: w['ipa'] for w in ipa1_list}
+        with open('words_with_pronunciation.json', 'r', encoding='utf-8') as f:
+            pron_list = json.load(f)
+        pron_dict = {w['word']: w['pron'] for w in pron_list}
+        with_ipa, without_ipa = parse_to_dicts(pron_list, get_ipa)
+        missing_from_ipa1 = []
+        for word in with_ipa:
+            if word not in ipa1_dict:
+                missing_from_ipa1.append(word)
+        if missing_from_ipa1:
+            print('missing from ipa1')
 
         ## future possibility: match [brackets] for phonetic transcriptions
         ## as opposed to just the phonemic transcriptions within /slashes/

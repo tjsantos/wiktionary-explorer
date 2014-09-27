@@ -1,4 +1,5 @@
 import re
+import json
 
 def parse_xml_to_json(infile, outfile):
     import xml.etree.ElementTree as ET
@@ -8,7 +9,6 @@ def parse_xml_to_json(infile, outfile):
         elem.clear()
 
     def make_json(word, text):
-        import json
         return json.dumps({'word': word, 'text': text})
 
     ns = '{http://www.mediawiki.org/xml/export-0.9/}'
@@ -77,22 +77,36 @@ def get_pronunciation(wikitext):
         pronunciation = ''
     return pronunciation
 
+
 def get_ipa(wikitext):
     """return a list of IPA's found"""
-    reg1 = r'/[^/]+/' # match /slashes/ (phonemic transcriptions)
-    # reg2 = r'\[[^\]]+\]' # match [brackets] (phonetic transcriptions)
-    results = re.findall(reg1, wikitext)
-    # remove duplicates before returning
-    ipa_list = []
-    for ipa in results:
-        if ipa not in ipa_list:
-            ipa_list.append(ipa)
-    return ipa_list
+    # TODO: possibly match [brackets] ? (phonetic transcriptions)
+    # match /slashes/ (phonemic transcriptions in IPA)
+    reg = r'IPA\|[^/]*(/[^/]+/)'
+    ipalist = re.findall(reg, wikitext)
+    return ipalist
 
-if __name__ == '__main__':
-    import sys
-    if len(sys.argv) != 3:
-        print('Expected 2 arguments: infile and outfile.')
-    else:
-        infile, outfile = sys.argv[1:3]
-        parse_xml_to_json(infile, outfile)
+def parse_to_dicts(wordlist, f):
+    """return 2 dictionaries associated with words: one containing the result
+    of f on the words' wikitext, the other containing the original wikitext if
+    f(wikitext) returns nothing
+    """
+    hit, miss = {}, {}
+    for w in wordlist:
+        wikitext = w['pron']
+        res = f(wikitext)
+        if res:
+            hit[w['word']] = res
+        else:
+            miss[w['word']] = wikitext
+    return hit, miss
+
+
+
+#if __name__ == '__main__':
+#    import sys
+#    if len(sys.argv) != 3:
+#        print('Expected 2 arguments: infile and outfile.')
+#    else:
+#        infile, outfile = sys.argv[1:3]
+#        parse_xml_to_json(infile, outfile)
