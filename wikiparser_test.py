@@ -43,7 +43,6 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(pron, example['pron'])
 
     def test_extract_ipa(self):
-        # from full english wordlist: 32028 with ipa, 12806 without
         for example in self.examples:
             with self.subTest(word=example['word']):
                 ipa = get_ipa(example['pron'])
@@ -68,12 +67,16 @@ class TestParser(unittest.TestCase):
             expected = ["/\u02c8m\u026as.h\u00e6p/"]
             self.assertEqual(ipa_list, expected)
         # word: hoping
+
+        # using lenient matching for everything within /slashes/: r'/[^/]+/'
+        # from full english wordlist: 32028 potential ipa, 12806 without
         with open('words_with_ipa1.json', 'r', encoding='utf-8') as f:
             ipa1_list = json.load(f)
         ipa1_dict = {w['word']: w['ipa'] for w in ipa1_list}
         with open('words_with_pronunciation.json', 'r', encoding='utf-8') as f:
             pron_list = json.load(f)
         pron_dict = {w['word']: w['pron'] for w in pron_list}
+
         with_ipa, without_ipa = parse_to_dicts(pron_list, get_ipa)
         missing_from_ipa1 = []
         for word in with_ipa:
@@ -81,6 +84,22 @@ class TestParser(unittest.TestCase):
                 missing_from_ipa1.append(word)
         if missing_from_ipa1:
             print('missing from ipa1')
+        diff = []
+        for word in ipa1_dict:
+            if word not in with_ipa:
+                diff.append({"word": word, "pron": pron_dict[word]})
+        # output diff to tmp file for examination
+        if diff:
+            out = 'test/diff.tmp'
+            with open(out, 'w', encoding='utf-8') as f:
+                json.dump(diff, f, indent=2)
+            print('length of diff:', len(diff))
+        # output new ipa list to tmp file for examination
+        new_ipa_list = [{word: ipa} for word, ipa in with_ipa.items()]
+        out = 'test/new_ipa.tmp'
+        with open(out, 'w', encoding='utf-8') as f:
+            json.dump(new_ipa_list, f, indent=2)
+
 
         ## future possibility: match [brackets] for phonetic transcriptions
         ## as opposed to just the phonemic transcriptions within /slashes/

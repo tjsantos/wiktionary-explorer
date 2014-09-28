@@ -50,5 +50,6 @@ words_unparsed.json
 
 *.pyc
 *.swp
+*.tmp
 words_filtered.json
 words_without_pronunciation.json
