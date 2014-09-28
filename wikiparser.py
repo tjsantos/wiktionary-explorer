@@ -86,6 +86,11 @@ def get_ipa(wikitext):
     ipalist = re.findall(reg, wikitext)
     return ipalist
 
+def get_ipa_lenient(wikitext):
+    reg = r'/[^/]+/'
+    ipalist = re.findall(reg, wikitext)
+    return ipalist
+
 def parse_to_dicts(wordlist, f):
     """return 2 dictionaries associated with words: one containing the result
     of f on the words' wikitext, the other containing the original wikitext if
@@ -101,7 +106,19 @@ def parse_to_dicts(wordlist, f):
             miss[w['word']] = wikitext
     return hit, miss
 
+# want methods to: load words + data, filter data, write to file
 
+def json_to_dict(filename):
+    with open(filename, 'r', encoding='utf-8') as f:
+        wikitext_list = json.load(f)
+    # wikitext_list is a list of objects/dicts, each with a 'word' value and a
+    # 'text' value
+    # the key for the text is not consistent, so find it here
+    for k in wikitext_list[0].keys():
+        if k != 'word':
+            text = k
+    wikitext_dict = {w['word']: w[text] for w in wikitext_list}
+    return wikitext_dict
 
 #if __name__ == '__main__':
 #    import sys

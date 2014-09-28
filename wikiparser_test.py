@@ -67,30 +67,38 @@ class TestParser(unittest.TestCase):
             expected = ["/\u02c8m\u026as.h\u00e6p/"]
             self.assertEqual(ipa_list, expected)
         # word: hoping
-        # word: pecan
-        # word: diddle
+        with self.subTest(word='pecan'):
+            pron = "===Pronunciation===\n{{rel-top|Pronunciation}}\n* {{IPA|[\u02ccpi(\u02d0)\u02c8k\u0252\u02d0n]|lang=en}} {{qualifier|pronunciation used by 32% of speakers in the US; common everywhere except New York, New England and the coastal Southeast}}<ref name=\"dialect\">[http://www4.uwm.edu/FLL/linguistics/dialect/staticmaps/q_21.html The Dialect Survey], and [http://spark-1590165977.us-west-2.elb.amazonaws.com/jkatz/SurveyMaps/ Joshua Katz' maps of it]</ref>\n** {{rhymes|\u0252n|lang=en}}\n* {{IPA|[p\u026a.k\u0252\u02d0n]|[\u02ccp\u026a\u02c8k\u0252\u02d0n]|lang=en}} {{qualifier|used by 23% of speakers in the US, mostly in the southern Midwest; also used in the UK}}<ref name=\"dialect\"></ref><ref>{{R:Dictionary.com}}</ref><ref name=COED>\"[http://www.wordreference.com/definition/pecan pecan]\" in the ''Concise Oxford English Dictionary'', 2008, WordReference.com</ref>\n* {{IPA|[\u02c8pi\u02d0\u02cck\u00e6n]|lang=en}} {{qualifier|used by 14% of speakers in the US; common in New York, New England and the coastal Southeast; also used in the UK}}<ref name=\"dialect\"></ref><ref name=Merriam-Webster>{{R:Merriam Webster Online}}</ref><ref>Christopher Davies, ''Divided by a Common Language: A Guide to British and American English'' (2005-7)</ref>\n** {{rhymes|\u00e6n|lang=en}}\n* {{IPA|[\u02c8pi\u02d0\u02cck\u0252(\u02d0)n]|lang=en}} {{qualifier|used by 13% of speakers in the US, mostly in the Upper Midwest}}<ref name=\"dialect\"></ref>\n* {{IPA|[\u02ccpi(\u02d0)\u02c8k\u00e6n]|lang=en}} {{qualifier|used by 7% of speakers in the US, not common in any region}}<ref name=\"dialect\"></ref>\n* {{IPA|[p\u026ak.\u00e6n]|lang=en}} {{qualifier|used almost exclusively in coastal New England, and not the most common pronunciation even there}}<ref name=\"dialect\"></ref>\n* {{IPA|[\u02ccp\u0259\u02c8k\u0254\u02d0n]|[\u02ccp\u026a\u02c8k\u0254\u02d0n]|lang=en}} {{qualifier|used in Louisiana}}<ref>Claude E. Kantner, ''Variant Louisiana pronunciations of the word \"pecan\"'' (1944)</ref>\n* {{IPA|[\u02ccp\u0259\u02c8k\u0252(\u02d0)n]|lang=en}} {{qualifier|sometimes used in the US when the word is unstressed}}<ref name=Merriam-Webster></ref>\n* {{IPA|[\u02ccp\u026a\u02c8k\u00e6n]|lang=en}} {{qualifier|used in the UK; also used by some US speakers}}<ref>Burkhard Dretzke, ''Modern British and American English pronunciation'' (2008)</ref><ref name=Merriam-Webster></ref>\n* {{IPA|[\u02c8pi\u02d0\u02cck\u0259n]|lang=en}} {{qualifier|used in the UK<ref name=COED></ref>}}\n{{rel-bottom}}\n\n"
+            ipa_list = get_ipa(pron)
+            self.assertEqual(ipa_list, [])
+        with self.subTest(word='diddle'):
+            pron = "===Pronunciation===\n* {{a|UK}} {{IPA|[\u02c8d\u026ad\u0259\u026b]|lang=en}}\n* {{rhymes|\u026ad\u0259l|lang=en}}\n\n{{examples-right|sense=music|width=300px|examples=<table cellpadding=7>\n  <tr>\n    <td></td><td>Single Paradiddle</td>\n    <td>[[image:16_single_paradiddle.gif]]</td>\n  </tr>\n  <tr>\n    <td></td><td>Double Paradiddle</td>\n    <td>[[image:17_double_paradiddle.gif]]</td>\n  </tr>\n  <tr>\n    <td></td><td>Triple Paradiddle</td>\n    <td>[[image:18_triple_paradiddle.gif]]</td>\n  </tr>\n  <tr>\n    <td></td><td>Paradiddle-Diddle</td>\n    <td>[[image:19_paradiddle_diddle.gif]]</td>\n  </tr>\n</table>\n}}\n\n"
+            ipa_list = get_ipa(pron)
+            self.assertEqual(ipa_list, [])
 
         # using lenient matching for everything within /slashes/: r'/[^/]+/'
         # from full english wordlist: 32028 potential ipa, 12806 without
-        with open('words_with_ipa1.json', 'r', encoding='utf-8') as f:
-            ipa1_list = json.load(f)
-        ipa1_dict = {w['word']: w['ipa'] for w in ipa1_list}
-        with open('words_with_pronunciation.json', 'r', encoding='utf-8') as f:
+        #with open('s4_ipa_lenient.json', 'r', encoding='utf-8') as f:
+        #    lenient_list = json.load(f)
+        #lenient_dict = {w['word']: w['ipa'] for w in lenient_list}
+        lenient_dict = json_to_dict('s4_ipa_lenient.json')
+        with open('s3_pronunciation.json', 'r', encoding='utf-8') as f:
             pron_list = json.load(f)
         pron_dict = {w['word']: w['pron'] for w in pron_list}
 
         with_ipa, without_ipa = parse_to_dicts(pron_list, get_ipa)
-        missing_from_ipa1 = []
+        missing_from_lenient = []
         for word in with_ipa:
-            if word not in ipa1_dict:
-                missing_from_ipa1.append(word)
-        if missing_from_ipa1:
-            print('missing from ipa1:', len(missing_from_ipa1))
+            if word not in lenient_dict:
+                missing_from_lenient.append(word)
+        if missing_from_lenient:
+            print('missing from lenient:', len(missing_from_lenient))
             assert False
         diff = []
-        for word in ipa1_dict:
+        for word in lenient_dict:
             if word not in with_ipa:
                 diff.append({"word": word, "pron": pron_dict[word]})
+        self.assertEqual(len(diff), 247)
 #        # output diff to tmp file for examination
 #        if diff:
 #            out = 'test/diff.tmp'

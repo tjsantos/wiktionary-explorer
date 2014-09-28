@@ -42,14 +42,17 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
+*.swp
+*.tmp
 enwiktionary-20140908-pages-meta-current.xml.bz2
 enwiktionary-20140908-pages-meta-current.xml
 small.json
-words_english.json
-words_unparsed.json
-
+english.json
+words.json
 *.pyc
-*.swp
-*.tmp
-words_filtered.json
-words_without_pronunciation.json
+pronunciation.json
+no_pronunciation.json
+ipa.json
+diff_ipa.json
+lenient_ipa.json
+lenient_no_ipa.json
