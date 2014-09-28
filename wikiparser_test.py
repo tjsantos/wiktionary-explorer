@@ -67,6 +67,8 @@ class TestParser(unittest.TestCase):
             expected = ["/\u02c8m\u026as.h\u00e6p/"]
             self.assertEqual(ipa_list, expected)
         # word: hoping
+        # word: pecan
+        # word: diddle
 
         # using lenient matching for everything within /slashes/: r'/[^/]+/'
         # from full english wordlist: 32028 potential ipa, 12806 without
@@ -83,22 +85,25 @@ class TestParser(unittest.TestCase):
             if word not in ipa1_dict:
                 missing_from_ipa1.append(word)
         if missing_from_ipa1:
-            print('missing from ipa1')
+            print('missing from ipa1:', len(missing_from_ipa1))
+            assert False
         diff = []
         for word in ipa1_dict:
             if word not in with_ipa:
                 diff.append({"word": word, "pron": pron_dict[word]})
-        # output diff to tmp file for examination
-        if diff:
-            out = 'test/diff.tmp'
-            with open(out, 'w', encoding='utf-8') as f:
-                json.dump(diff, f, indent=2)
-            print('length of diff:', len(diff))
-        # output new ipa list to tmp file for examination
-        new_ipa_list = [{word: ipa} for word, ipa in with_ipa.items()]
-        out = 'test/new_ipa.tmp'
-        with open(out, 'w', encoding='utf-8') as f:
-            json.dump(new_ipa_list, f, indent=2)
+#        # output diff to tmp file for examination
+#        if diff:
+#            out = 'test/diff.tmp'
+#            with open(out, 'w', encoding='utf-8') as f:
+#                json.dump(diff, f, indent=2)
+#            print('length of diff:', len(diff))
+#        # output new ipa list to tmp file for examination
+#        new_ipa_list = [{word: ipa} for word, ipa in with_ipa.items()]
+#        out = 'test/new_ipa.tmp'
+#        with open(out, 'w', encoding='utf-8') as f:
+#            json.dump(new_ipa_list, f, indent=2)
+
+#        import code; code.interact(local=dict(globals(), **locals()))
 
 
         ## future possibility: match [brackets] for phonetic transcriptions
