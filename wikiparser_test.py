@@ -27,31 +27,36 @@ class TestParser(unittest.TestCase):
         words_expected = 19
         self.assertEqual(words_found, words_expected)
 
+    def _test_examples_parse_step(self, from_label, to_label):
+        step_names = ['text', 'lang', 'pron', 'ipa']
+        self.assertIn(from_label, step_names)
+        self.assertIn(to_label, step_names)
+        map_functions = {'lang': get_english,
+                         'pron': get_pronunciation,
+                         'ipa': get_ipa}
+        mapper = map_functions[to_label]
+        # obtain only the relevant examples for the given parse step
+        examples = ((word, text) for word, text in self.examples.items() if
+                    from_label in text and to_label in text)
+        for word, text in examples:
+            comment = text['comment'] if 'comment' in text else None
+            with self.subTest(word=word, comment=comment):
+                result = mapper(text[from_label])
+                expected = text[to_label]
+                if from_label == 'text':
+                    # full text is long so assert on length first
+                    self.assertEqual(len(result), len(expected))
+                self.assertEqual(result, expected)
+
+
     def test_extract_language_section(self):
-        for word, text in self.examples.items():
-            if 'text' in text and 'lang' in text:
-                comment = text['comment'] if 'comment' in text else None
-                with self.subTest(word=word, comment=comment):
-                    english = get_english(text['text'])
-                    # assert fail on length first, since string output is long
-                    self.assertEqual(len(english), len(text['lang']))
-                    self.assertEqual(english, text['lang'])
+        self._test_examples_parse_step('text', 'lang')
 
     def test_extract_pronunciation_section(self):
-        for word, text in self.examples.items():
-            if 'lang' in text and 'pron' in text:
-                comment = text['comment'] if 'comment' in text else None
-                with self.subTest(word=word, comment=comment):
-                    pron = get_pronunciation(text['lang'])
-                    self.assertEqual(pron, text['pron'])
+        self._test_examples_parse_step('lang', 'pron')
 
     def test_extract_ipa(self):
-        for word, text in self.examples.items():
-            if 'pron' in text and 'ipa' in text:
-                comment = text['comment'] if 'comment' in text else None
-                with self.subTest(word=word, comment=comment):
-                    ipa = get_ipa(text['pron'])
-                    self.assertEqual(sorted(ipa), sorted(text['ipa']))
+        self._test_examples_parse_step('pron', 'ipa')
         # word: hoping
 
         # using lenient matching for everything within /slashes/: r'/[^/]+/'
