@@ -1,6 +1,7 @@
+import json
 import os
 import re
-import json
+import string
 
 def parse_xml_to_json(infile, outfile):
     import xml.etree.ElementTree as ET
@@ -66,16 +67,14 @@ def get_english(wikitext):
     return english_section
 
 def get_pronunciation(wikitext):
-    """return the first pronunciation section found"""
-    regex = r'(^===[^=]+===\s*$)'
+    """return all pronunciation sections found"""
+    regex = r'(^==+[^=]+==+\s*$)'
     results = re.split(regex, wikitext, flags=re.MULTILINE)
-    # find the section for English and save the result
+    # find the sections for pronunciation and save the result
+    pronunciation = ''
     for i, res in enumerate(results):
-        if res.strip() == '===Pronunciation===':
-            pronunciation = results[i] + results[i+1]
-            break
-    else:
-        pronunciation = ''
+        if res.strip(string.whitespace + '=') == 'Pronunciation':
+            pronunciation += results[i] + results[i+1]
     return pronunciation
 
 

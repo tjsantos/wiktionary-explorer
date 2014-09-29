@@ -40,7 +40,8 @@ class TestParser(unittest.TestCase):
                     from_label in text and to_label in text)
         for word, text in examples:
             comment = text['comment'] if 'comment' in text else None
-            with self.subTest(word=word, comment=comment):
+            with self.subTest(word=word, comment=comment,
+                              step=(from_label, to_label)):
                 result = mapper(text[from_label])
                 expected = text[to_label]
                 if from_label == 'text':
