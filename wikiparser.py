@@ -1,3 +1,4 @@
+import os
 import re
 import json
 
@@ -114,21 +115,14 @@ def diff_dict(d1, d2):
     """
     return {key: val for key, val in d1.items() if key not in d2}
 
-def json_to_dict(filename):
-    """shortcut for json.load, using a filename and expecting a dict"""
+def json_load(filename):
+    """shortcut for json.load using a filename"""
     with open(filename, 'r', encoding='utf-8') as f:
-        wikitext_list = json.load(f)
-    # wikitext_list is a list of objects/dicts, each with a 'word' value and a
-    # 'text' value
-    # the key for the text is not consistent, so find it here
-    for k in wikitext_list[0].keys():
-        if k != 'word':
-            text = k
-    wikitext_dict = {w['word']: w[text] for w in wikitext_list}
+        wikitext_dict = json.load(f)
     return wikitext_dict
 
-def dump_to_json(obj, filename, indent=2, **kwargs):
-    """shortcut for json.dump, using a filename and default preferred options
+def json_dump(obj, filename, indent=2, **kwargs):
+    """shortcut for json.dump using a filename and default preferred options
     """
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(obj, f, indent=indent, **kwargs)

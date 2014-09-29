@@ -78,7 +78,7 @@ class TestParser(unittest.TestCase):
 
         # using lenient matching for everything within /slashes/: r'/[^/]+/'
         # from full english wordlist: 32028 potential ipa, 12806 without
-        pronunciation = json_to_dict('s3_pronunciation.json')
+        pronunciation = json_load('s3_pronunciation.json')
 
         ipa, _ = map_filter_dict(get_ipa, pronunciation)
         ipa_lenient, _ = map_filter_dict(get_ipa_lenient, pronunciation)
