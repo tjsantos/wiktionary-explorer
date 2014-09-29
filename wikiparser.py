@@ -91,24 +91,21 @@ def get_ipa_lenient(wikitext):
     ipalist = re.findall(reg, wikitext)
     return ipalist
 
-def parse_to_dicts(wordlist, f):
-    """return 2 dictionaries associated with words: one containing the result
-    of f on the words' wikitext, the other containing the original wikitext if
-    f(wikitext) returns nothing
+def map_filter_dict(f, d):
+    """return two dictionary copies: one with mapped values using `f`, another
+    with original values where f(value) is empty/False.
     """
     hit, miss = {}, {}
-    for w in wordlist:
-        wikitext = w['pron']
-        res = f(wikitext)
-        if res:
-            hit[w['word']] = res
+    for key, val in d.items():
+        new_val = f(val)
+        if new_val:
+            hit[key] = new_val
         else:
-            miss[w['word']] = wikitext
+            miss[key] = val
     return hit, miss
 
-# want methods to: load words + data, filter data, write to file
-
 def json_to_dict(filename):
+    """shortcut for json.load, using a filename and expecting a dict"""
     with open(filename, 'r', encoding='utf-8') as f:
         wikitext_list = json.load(f)
     # wikitext_list is a list of objects/dicts, each with a 'word' value and a
@@ -119,6 +116,12 @@ def json_to_dict(filename):
             text = k
     wikitext_dict = {w['word']: w[text] for w in wikitext_list}
     return wikitext_dict
+
+def dump_to_json(obj, filename, indent=2, **kwargs):
+    """shortcut for json.dump, using a filename and default preferred options
+    """
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(obj, f, indent=indent, **kwargs)
 
 #if __name__ == '__main__':
 #    import sys

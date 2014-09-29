@@ -78,26 +78,14 @@ class TestParser(unittest.TestCase):
 
         # using lenient matching for everything within /slashes/: r'/[^/]+/'
         # from full english wordlist: 32028 potential ipa, 12806 without
-        #with open('s4_ipa_lenient.json', 'r', encoding='utf-8') as f:
-        #    lenient_list = json.load(f)
-        #lenient_dict = {w['word']: w['ipa'] for w in lenient_list}
-        lenient_dict = json_to_dict('s4_ipa_lenient.json')
-        with open('s3_pronunciation.json', 'r', encoding='utf-8') as f:
-            pron_list = json.load(f)
-        pron_dict = {w['word']: w['pron'] for w in pron_list}
+        pronunciation = json_to_dict('s3_pronunciation.json')
 
-        with_ipa, without_ipa = parse_to_dicts(pron_list, get_ipa)
-        missing_from_lenient = []
-        for word in with_ipa:
-            if word not in lenient_dict:
-                missing_from_lenient.append(word)
-        if missing_from_lenient:
-            print('missing from lenient:', len(missing_from_lenient))
-            assert False
+        ipa, _ = map_filter_dict(get_ipa, pronunciation)
+        ipa_lenient, _ = map_filter_dict(get_ipa_lenient, pronunciation)
         diff = []
-        for word in lenient_dict:
-            if word not in with_ipa:
-                diff.append({"word": word, "pron": pron_dict[word]})
+        for word in ipa_lenient:
+            if word not in ipa:
+                diff.append({"word": word, "pron": pronunciation[word]})
         self.assertEqual(len(diff), 247)
 #        # output diff to tmp file for examination
 #        if diff:
