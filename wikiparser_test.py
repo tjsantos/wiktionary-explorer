@@ -82,10 +82,7 @@ class TestParser(unittest.TestCase):
 
         ipa, _ = map_filter_dict(get_ipa, pronunciation)
         ipa_lenient, _ = map_filter_dict(get_ipa_lenient, pronunciation)
-        diff = []
-        for word in ipa_lenient:
-            if word not in ipa:
-                diff.append({"word": word, "pron": pronunciation[word]})
+        diff = diff_dict(ipa_lenient, ipa)
         self.assertEqual(len(diff), 247)
 #        # output diff to tmp file for examination
 #        if diff:

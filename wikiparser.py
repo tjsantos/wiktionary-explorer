@@ -104,6 +104,16 @@ def map_filter_dict(f, d):
             miss[key] = val
     return hit, miss
 
+def diff_dict(d1, d2):
+    """return a dictionary of items in d1 whose key is absent in d2
+
+    >>> d1 = {'a': 'apple', 'b': 'banana'}
+    >>> d2 = {'a': 'apple'}
+    >>> diff_dict(d1, d2)
+    {'b': 'banana'}
+    """
+    return {key: val for key, val in d1.items() if key not in d2}
+
 def json_to_dict(filename):
     """shortcut for json.load, using a filename and expecting a dict"""
     with open(filename, 'r', encoding='utf-8') as f:
