@@ -106,7 +106,7 @@ def map_filter_dict(f, d):
     return hit, miss
 
 def diff_dict(d1, d2):
-    """return a dictionary of items in d1 whose key is absent in d2
+    """return a dictionary of items in d1 whose key is absent from d2
 
     >>> d1 = {'a': 'apple', 'b': 'banana'}
     >>> d2 = {'a': 'apple'}

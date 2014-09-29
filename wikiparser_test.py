@@ -84,19 +84,6 @@ class TestParser(unittest.TestCase):
         ipa_lenient, _ = map_filter_dict(get_ipa_lenient, pronunciation)
         diff = diff_dict(ipa_lenient, ipa)
         self.assertEqual(len(diff), 247)
-#        # output diff to tmp file for examination
-#        if diff:
-#            out = 'test/diff.tmp'
-#            with open(out, 'w', encoding='utf-8') as f:
-#                json.dump(diff, f, indent=2)
-#            print('length of diff:', len(diff))
-#        # output new ipa list to tmp file for examination
-#        new_ipa_list = [{word: ipa} for word, ipa in with_ipa.items()]
-#        out = 'test/new_ipa.tmp'
-#        with open(out, 'w', encoding='utf-8') as f:
-#            json.dump(new_ipa_list, f, indent=2)
-
-#        import code; code.interact(local=dict(globals(), **locals()))
 
 
         ## future possibility: match [brackets] for phonetic transcriptions
