@@ -2,6 +2,7 @@ import json
 import os
 import re
 import string
+import sys
 
 def parse_xml_to_json(infile, outfile):
     import xml.etree.ElementTree as ET
@@ -104,16 +105,6 @@ def map_filter_dict(f, d):
             miss[key] = val
     return hit, miss
 
-def diff_dict(d1, d2):
-    """return a dictionary of items in d1 whose key is absent from d2
-
-    >>> d1 = {'a': 'apple', 'b': 'banana'}
-    >>> d2 = {'a': 'apple'}
-    >>> diff_dict(d1, d2)
-    {'b': 'banana'}
-    """
-    return {key: val for key, val in d1.items() if key not in d2}
-
 def json_load(filename):
     """shortcut for json.load using a filename"""
     with open(filename, 'r', encoding='utf-8') as f:
@@ -125,6 +116,36 @@ def json_dump(obj, filename, indent=2, **kwargs):
     """
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(obj, f, indent=indent, **kwargs)
+
+map_functions = {'lang': get_english, 'pron': get_pronunciation, 'ipa': get_ipa}
+
+def pipeline(start='text', end='ipa'):
+    steps = ['text', 'lang', 'pron', 'ipa']
+    assert start in steps and end in steps, 'steps: {}'.format(steps)
+    # track the next step in the pipeline and parse appropriately
+    n = steps.index(start) + 1
+    end_n = steps.index(end)
+    while n <= end_n:
+        step_from = steps[n-1]
+        step_to = steps[n]
+        print(step_from, 'to', step_to)
+        wikidict = json_load(step_from + '.json')
+        map_function = map_functions[steps[n]]
+        hit, miss = map_filter_dict(map_function, wikidict)
+        print(len(hit), 'hits,', len(miss), 'misses')
+        json_dump(hit, step_to + '.json')
+        json_dump(miss, 'no_' + step_to + '.json')
+        n += 1
+
+if __name__ == '__main__':
+    if len(sys.argv) not in (2, 3):
+        print('Usage: python {} start [end]'.format(sys.argv[0]))
+    else:
+        kwargs = {}
+        kwargs['start'] = sys.argv[1]
+        if len(sys.argv) == 3:
+            kwargs['end'] == sys.argv[2]
+        pipeline(**kwargs)
 
 #if __name__ == '__main__':
 #    import sys

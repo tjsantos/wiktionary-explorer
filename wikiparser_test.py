@@ -59,16 +59,16 @@ class TestParser(unittest.TestCase):
         self._test_examples_parse_step('pron', 'ipa')
         # word: hoping
 
-        # using lenient matching for everything within /slashes/: r'/[^/]+/'
-        # from full english wordlist: 32028 potential ipa, 12806 without
-        pronunciation = json_load('test/s3_pronunciation.json')
-        self.assertGreater(len(pronunciation), 44000)
+        pronunciation = json_load('test/pron.json')
+        self.assertGreater(len(pronunciation), 45000)
 
-        ipa, _ = map_filter_dict(get_ipa, pronunciation)
+        ipa, no_ipa = map_filter_dict(get_ipa, pronunciation)
         ipa_lenient, _ = map_filter_dict(get_ipa_lenient, pronunciation)
-        diff = diff_dict(ipa_lenient, ipa)
+        ipa_diff = {word: pronunciation['word']
+                    for word in ipa_lenient.keys() if word not in ipa}
         self.assertGreater(len(ipa_lenient), 32000)
-        self.assertGreater(len(diff), 200)
+        self.assertGreater(len(ipa), 32000)
+        self.assertGreater(len(ipa_diff), 200)
 
         ## future possibility: match [brackets] for phonetic transcriptions
         ## as opposed to just the phonemic transcriptions within /slashes/
