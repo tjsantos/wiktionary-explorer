@@ -83,8 +83,15 @@ def get_ipa(wikitext):
     """return a list of IPA's found"""
     # TODO: possibly match [brackets] ? (phonetic transcriptions)
     # match /slashes/ (phonemic transcriptions in IPA)
-    reg = r'IPA\|[^/]*(/[^/]+/)[^}\n]*}'
-    ipalist = re.findall(reg, wikitext)
+    #reg = r'IPA\|[^/]*(/[^/]+/)[^}\n]*}'
+    ipalist = []
+    #reg = r'IPA(?:[^/]*(/[^/]+/))+.*?}'
+    reg_template = r'{{.*?}}'
+    reg_ipa = r'/.*?/'
+    for line in wikitext.splitlines():
+        for template in re.findall(reg_template, line):
+            if 'IPA' in template:
+                ipalist += re.findall(reg_ipa, template)
     return ipalist
 
 def get_ipa_lenient(wikitext):

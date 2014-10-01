@@ -64,11 +64,11 @@ class TestParser(unittest.TestCase):
 
         ipa, no_ipa = map_filter_dict(get_ipa, pronunciation)
         ipa_lenient, _ = map_filter_dict(get_ipa_lenient, pronunciation)
-        ipa_diff = {word: pronunciation['word']
-                    for word in ipa_lenient.keys() if word not in ipa}
+        ipa_diff = {k: pronunciation[k] for k in ipa_lenient.keys()
+                    if k not in ipa or len(ipa_lenient[k]) > len(ipa[k])}
         self.assertGreater(len(ipa_lenient), 32000)
         self.assertGreater(len(ipa), 32000)
-        self.assertGreater(len(ipa_diff), 200)
+        self.assertGreater(len(ipa_diff), 500)
 
         ## future possibility: match [brackets] for phonetic transcriptions
         ## as opposed to just the phonemic transcriptions within /slashes/
@@ -80,4 +80,16 @@ class TestParser(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    # temp setup to help testing
+    if 0:
+        pron = json_load('pron.json')
+        ipa = json_load('ipa.json')
+        ipa_lenient = json_load('ipa_lenient.json')
+        hit, miss = map_filter_dict(get_ipa, pron)
+        diff = {k: pron[k] for k in ipa_lenient.keys()
+                    if k not in hit or len(ipa_lenient[k]) > len(hit[k])}
+        json_dump(hit, 'test/hit.tmp.json')
+        #json_dump(miss, 'test/miss.tmp.json')
+        json_dump(diff, 'test/diff.tmp.json')
+    else:
+        unittest.main()
