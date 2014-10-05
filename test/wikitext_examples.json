@@ -48,5 +48,14 @@
     "comment": "two pronunciation sections",
     "lang": "==English==\n\n===Etymology 1===\nAn [[aphetic]] form of ''[[banana]]''.\n\n====Pronunciation====\n* {{enPR|n\u00e4\u02b9n\u0259}}, {{IPA|/\u02c8n\u0251\u02d0n\u0259/|lang=en}}\n* {{rhymes|\u0251\u02d0n\u0259|lang=en}}\n\n====Noun====\n{{en-noun}}\n\n# {{context|informal|lang=en}} Short form of [[banana]], the fruit.\n# {{context|slang|lang=en}} A fool.\n#: ''You look a right '''nana''' dressed up like that.''\n\n===Etymology 2===\nVariant spelling of ''[[nanna]]''.\n\n====Pronunciation====\n* {{enPR|n\u0103n\u02b9\u0259}}, {{IPA|/\u02c8n\u00e6n\u0259/|lang=en}}\n* {{rhymes|\u00e6n\u0259|lang=en}}\n\n====Noun====\n{{en-noun}}\n\n# {{context|informal|lang=en}} A pet name for one's [[grandmother]].\n# A [[nanny]].\n\n===Anagrams===\n* [[anna#English|anna]], [[Anna#English|Anna]]\n* [[naan#English|naan]]\n\n[[Category:English heteronyms]]\n\n----\n\n",
     "pron": "====Pronunciation====\n* {{enPR|n\u00e4\u02b9n\u0259}}, {{IPA|/\u02c8n\u0251\u02d0n\u0259/|lang=en}}\n* {{rhymes|\u0251\u02d0n\u0259|lang=en}}\n\n====Pronunciation====\n* {{enPR|n\u0103n\u02b9\u0259}}, {{IPA|/\u02c8n\u00e6n\u0259/|lang=en}}\n* {{rhymes|\u00e6n\u0259|lang=en}}\n\n"
-  }
+  },
+    "you": {
+      "comment": "don't capture IPAchar templates",
+      "pron": "===Pronunciation===\n* {{qualifier|stressed}}\n** {{a|UK}} {{enPR|yo\u035eo}}, {{audio-IPA|En-uk-you.ogg|/ju\u02d0/|lang=en}}\n** {{a|US}} {{enPR|yo\u035eo}}, {{audio-IPA|en-us-you.ogg|/ju/|lang=en}}\n** {{rhymes|u\u02d0|lang=en}}\n* {{qualifier|unstressed}}\n** {{a|US}} {{enPR|y\u0259}}, {{audio-IPA|en-us-you unstressed.ogg|/j\u0259/|lang=en}}\n* {{homophones|lang=en|ewe|u|yew|hew}} {{qualifier|in h-dropping dialects}}, [[hue]] {{qualifier|in h-dropping dialects}}\n\nWhen a word ending in {{IPAchar|/t/}}, {{IPAchar|/d/}}, {{IPAchar|/s/}}, or {{IPAchar|/z/}} is followed by {{term|you|lang=en}}, these may coalesce with the {{IPAchar|/j/}}, resulting in {{IPAchar|/t\u0283/}}, {{IPAchar|/d\u0292/}}, {{IPAchar|/\u0283/}} and {{IPAchar|/\u0292/}}, respectively. This is occasionally represented in writing, e.g. {{term|gotcha|lang=en}} (from {{term|got|lang=en}} {{term|you|lang=en}}).\n\n",
+      "ipa": [
+          "/ju\u02d0/",
+          "/ju/",
+          "/j\u0259/"
+      ]
+    }
 }

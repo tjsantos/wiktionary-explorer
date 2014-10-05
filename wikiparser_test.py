@@ -57,7 +57,11 @@ class TestParser(unittest.TestCase):
 
     def test_extract_ipa(self):
         self._test_examples_parse_step('pron', 'ipa')
+        # word: impasse
+        # word: eschew
+        # word: garage
         # word: hoping
+        # count number of ipa to find bugs
 
         pronunciation = json_load('test/pron.json')
         self.assertGreater(len(pronunciation), 45000)
@@ -82,14 +86,18 @@ class TestParser(unittest.TestCase):
 if __name__ == '__main__':
     # temp setup to help testing
     if 0:
-        pron = json_load('pron.json')
-        ipa = json_load('ipa.json')
-        ipa_lenient = json_load('ipa_lenient.json')
-        hit, miss = map_filter_dict(get_ipa, pron)
-        diff = {k: pron[k] for k in ipa_lenient.keys()
-                    if k not in hit or len(ipa_lenient[k]) > len(hit[k])}
+        folder = 'out/'
+        pron = json_load(folder + 'pron.json')
+        ipa = json_load(folder + 'ipa.json')
+        ipa_lenient = json_load(folder + 'ipa_lenient.json')
+        hit, miss = map_filter_dict(get_ipa_test, pron)
+        diff_lenient = {k: pron[k] for k in ipa_lenient.keys()
+                        if k not in hit or len(ipa_lenient[k]) > len(hit[k])}
+        diff_prev = {k: pron[k] for k in ipa.keys()
+                     if k not in hit or len(ipa[k]) > len(hit[k])}
         json_dump(hit, 'test/hit.tmp.json')
         #json_dump(miss, 'test/miss.tmp.json')
-        json_dump(diff, 'test/diff.tmp.json')
+        json_dump(diff_lenient, 'test/diff_lenient.tmp.json')
+        json_dump(diff_prev, 'test/diff_prev.tmp.json')
     else:
         unittest.main()

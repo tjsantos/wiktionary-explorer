@@ -79,19 +79,31 @@ def get_pronunciation(wikitext):
     return pronunciation
 
 
-def get_ipa(wikitext):
+def get_ipa_test(wikitext):
     """return a list of IPA's found"""
-    # TODO: possibly match [brackets] ? (phonetic transcriptions)
     # match /slashes/ (phonemic transcriptions in IPA)
-    #reg = r'IPA\|[^/]*(/[^/]+/)[^}\n]*}'
     ipalist = []
-    #reg = r'IPA(?:[^/]*(/[^/]+/))+.*?}'
     reg_template = r'{{.*?}}'
     reg_ipa = r'/.*?/'
     for line in wikitext.splitlines():
         for template in re.findall(reg_template, line):
-            if 'IPA' in template:
+            if re.search(r'IPA(?!char)', template):
                 ipalist += re.findall(reg_ipa, template)
+    return ipalist
+
+def get_ipa(wikitext):
+    """return a list of IPA's found"""
+    # match /slashes/ (phonemic transcriptions in IPA)
+    ipalist = []
+    reg_template = r'{{.*?}}'
+    reg_ipa = r'/.*?/'
+    for line in wikitext.splitlines():
+        for template in re.findall(reg_template, line):
+            if re.search(r'IPA(?!char)', template):
+                for section in template.split('|'):
+                    match = re.search(reg_ipa, section)
+                    if match:
+                        ipalist.append(match.group())
     return ipalist
 
 def get_ipa_lenient(wikitext):
@@ -127,8 +139,12 @@ def json_dump(obj, filename, indent=2, **kwargs):
 map_functions = {'lang': get_english, 'pron': get_pronunciation, 'ipa': get_ipa}
 
 def pipeline(start='text', end='ipa'):
+    # TODO: ipa_lenient and ipa_diff
     steps = ['text', 'lang', 'pron', 'ipa']
     assert start in steps and end in steps, 'steps: {}'.format(steps)
+    # prepare output folder
+    folder = 'out/'
+    os.makedirs(folder, exist_ok=True)
     # track the next step in the pipeline and parse appropriately
     n = steps.index(start) + 1
     end_n = steps.index(end)
@@ -136,12 +152,12 @@ def pipeline(start='text', end='ipa'):
         step_from = steps[n-1]
         step_to = steps[n]
         print(step_from, 'to', step_to)
-        wikidict = json_load(step_from + '.json')
+        wikidict = json_load(folder + step_from + '.json')
         map_function = map_functions[steps[n]]
         hit, miss = map_filter_dict(map_function, wikidict)
         print(len(hit), 'hits,', len(miss), 'misses')
-        json_dump(hit, step_to + '.json')
-        json_dump(miss, 'no_' + step_to + '.json')
+        json_dump(hit, folder + step_to + '.json')
+        json_dump(miss, folder + 'no_' + step_to + '.json')
         n += 1
 
 if __name__ == '__main__':
