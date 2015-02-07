@@ -95,15 +95,14 @@ def get_ipa(wikitext):
     """return a list of IPA's found"""
     # match /slashes/ (phonemic transcriptions in IPA)
     ipalist = []
-    reg_template = r'{{.*?}}'
-    reg_ipa = r'/.*?/'
-    for line in wikitext.splitlines():
-        for template in re.findall(reg_template, line):
-            if re.search(r'IPA(?!char)', template):
-                for section in template.split('|'):
-                    match = re.search(reg_ipa, section)
-                    if match:
-                        ipalist.append(match.group())
+    re_ipa = r'/.*?/'
+    templates = get_templates(wikitext)
+    for template in templates:
+        if template.name in ('IPA', 'audio-IPA'):
+            for arg in template.args:
+                match = re.search(re_ipa, arg)
+                if match:
+                    ipalist.append(match.group())
     return ipalist
 
 def get_ipa_lenient(wikitext):
@@ -116,7 +115,9 @@ class Wikitemplate(list):
     @classmethod
     def parse(cls, s):
         if s[:2] != '{{' or s[-2:] != '}}':
-            raise SyntaxError('string must start with "{{" and end with "}}"')
+            msg = 'string "{}" must start with "{{{{" and end with "}}}}"'.format(s)
+            raise SyntaxError(msg)
+        # TODO: don't split arguments on inner templates
         return cls(map(str.strip, s[2:-2].split('|')))
 
     @property
@@ -136,11 +137,8 @@ def get_templates(wikitext):
             # find matching '}}'
             stack = ['{{']
             j = i + 2
-            while stack:
-                if j >= len(wikitext):
-                    # SyntaxError: unclosed template
-                    break
-                elif wikitext[j:j+2] == '}}':
+            while stack and j < len(wikitext):
+                if wikitext[j:j+2] == '}}':
                     stack.pop()
                     j += 2
                 elif wikitext[j:j+2] == '{{':
@@ -148,8 +146,13 @@ def get_templates(wikitext):
                     j += 2
                 else:
                     j += 1
-            # parse and collect template
-            templates.append(Wikitemplate.parse(wikitext[i:j]))
+            if stack:
+                # SyntaxError: unclosed template
+                #print('skipping unclosed template: {}'.format(wikitext[i:j]))
+                pass
+            else:
+                # parse and collect template
+                templates.append(Wikitemplate.parse(wikitext[i:j]))
             i = j
         else:
             i += 1

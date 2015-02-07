@@ -82,6 +82,15 @@ class TestParser(unittest.TestCase):
         #     ipa = "[[\u00e6k\u02c8s\u025bnd]]"
         #     self.assertEqual(get_ipa(pron), ipa)
 
+    def test_get_templates(self):
+        wikitext = ("* {{a|US}} {{enPR|mī-ăz'mə|mē- ăz'mə}}, "
+                    "{{IPA|/maɪˈæzmə/|/miˈæzmə/|lang=en}}")
+        templates = get_templates(wikitext)
+        expected = [['a', 'US'],
+                    ['enPR', "mī-ăz'mə", "mē- ăz'mə"],
+                    ['IPA', '/maɪˈæzmə/', '/miˈæzmə/', 'lang=en']]
+        self.assertEqual(expected, templates)
+
 
 if __name__ == '__main__':
     # temp setup to help testing
