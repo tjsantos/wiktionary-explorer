@@ -111,6 +111,50 @@ def get_ipa_lenient(wikitext):
     ipalist = re.findall(reg, wikitext)
     return ipalist
 
+class Wikitemplate(list):
+
+    @classmethod
+    def parse(cls, s):
+        if s[:2] != '{{' or s[-2:] != '}}':
+            raise SyntaxError('string must start with "{{" and end with "}}"')
+        return cls(map(str.strip, s[2:-2].split('|')))
+
+    @property
+    def name(self):
+        return self[0] if self else None
+
+    @property
+    def args(self):
+        return self[1:]
+
+def get_templates(wikitext):
+    """Return a list of top level templates found in the given wikitext."""
+    templates = []
+    i = 0
+    while i < len(wikitext):
+        if wikitext[i:i+2] == '{{':
+            # find matching '}}'
+            stack = ['{{']
+            j = i + 2
+            while stack:
+                if j >= len(wikitext):
+                    # SyntaxError: unclosed template
+                    break
+                elif wikitext[j:j+2] == '}}':
+                    stack.pop()
+                    j += 2
+                elif wikitext[j:j+2] == '{{':
+                    stack.append('{{')
+                    j += 2
+                else:
+                    j += 1
+            # parse and collect template
+            templates.append(Wikitemplate.parse(wikitext[i:j]))
+            i = j
+        else:
+            i += 1
+    return templates
+
 def map_filter_dict(f, d):
     """return two dictionary copies: one with mapped values using `f`, another
     with original values where f(value) is empty/False.
