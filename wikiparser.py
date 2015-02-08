@@ -158,6 +158,79 @@ def get_templates(wikitext):
             i += 1
     return templates
 
+def normalize_accent(accent):
+    accents = {
+        '': '',
+        'Audio': '',
+        'Audio (US)': 'US',
+        'audio (US)': 'US',
+        'Audio (U.S.A.)': 'US',
+        'Audio (US, Northern California)': 'US',
+        'Audio (Northern California, US)': 'US',
+        'Audio (UK)': 'UK',
+        'Audio (CA)': 'CA',
+        'Audio (AUS)': 'AU',
+        'Audio (Australia)': 'AU',
+        'US': 'US',
+        'GenAm': 'US',
+        'UK': 'UK',
+        'RP': 'UK',
+        'British': 'UK',
+        'Canada': 'CA',
+        'CA': 'CA',
+        'Australia': 'AU',
+        'AusE': 'AU',
+        'AU': 'AU',
+        'Aus': 'AU',
+        'NZ': 'NZ',
+        'Ireland': 'IE'
+    }
+    return accents[accent] if accent in accents else '--'
+
+def ipas_from_template(template):
+    ipas = []
+    re_ipa = r'/.+/'
+    for arg in template.args:
+        # obtain first match in each arg
+        match = re.search(re_ipa, arg)
+        if match:
+            ipas.append(match.group())
+    return ipas
+
+def parse_pron(wikitext):
+    '''Parse a pronunciation wikitext section into audio and ipa.'''
+    audio_list = []
+    ipa_list = []
+    for line in wikitext.splitlines():
+        templates = get_templates(line)
+        # grab accents from the first accent template, default: ''
+        accents = ['']
+        for t in templates:
+            if t.name == 'a':
+                accents = t.args
+                break
+        assert accents, 'Expected arguments in template: {}'.format(t)
+        # associate each template with the accent
+        for a in accents:
+            a = normalize_accent(a)
+            for t in templates:
+                if t.name == 'IPA':
+                    for ipa in ipas_from_template(t):
+                        ipa_list.append({'ipa': ipa, 'accent': a})
+                elif t.name == 'audio':
+                    # grab accent from audio template if not given
+                    if not a:
+                        a = normalize_accent(t.args[1])
+                    audio_list.append({'filename': t.args[0], 'accent': a})
+                elif t.name == 'audio-IPA':
+                    audio_list.append({'filename': t.args[0], 'accent': a})
+                    for ipa in ipas_from_template(t):
+                        ipa_list.append({'ipa': ipa, 'accent': a})
+                else:
+                    # TODO: log skipped templates?
+                    pass
+    return {'audio': audio_list, 'ipa': ipa_list}
+
 def map_filter_dict(f, d):
     """return two dictionary copies: one with mapped values using `f`, another
     with original values where f(value) is empty/False.
