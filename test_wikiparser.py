@@ -60,11 +60,6 @@ class TestParser(unittest.TestCase):
     @unittest.skip('refactoring')
     def test_extract_ipa(self):
         self._test_examples_parse_step('pron', 'ipa')
-        # word: impasse
-        # word: eschew
-        # word: garage
-        # word: hoping
-        # count number of ipa to find bugs
 
         pronunciation = wp.json_load('test/pron.json')
         self.assertGreater(len(pronunciation), 45000)
@@ -76,24 +71,6 @@ class TestParser(unittest.TestCase):
         self.assertGreater(len(ipa_lenient), 32000)
         self.assertGreater(len(ipa), 32000)
         self.assertGreater(len(ipa_diff), 500)
-
-        ## future possibility: match [brackets] for phonetic transcriptions
-        ## as opposed to just the phonemic transcriptions within /slashes/
-        # with self.subTest(word='accend'):
-        #     pron = ("===Pronunciation===\n"
-        #             "* {{IPA|[\u00e6k\u02c8s\u025bnd]|lang=en}}\n\n")
-        #     ipa = "[[\u00e6k\u02c8s\u025bnd]]"
-        #     self.assertEqual(get_ipa(pron), ipa)
-
-    @unittest.skip('refactoring')
-    def test_get_templates(self):
-        wikitext = ("* {{a|US}} {{enPR|mī-ăz'mə|mē- ăz'mə}}, "
-                    "{{IPA|/maɪˈæzmə/|/miˈæzmə/|lang=en}}")
-        templates = wp.get_templates(wikitext)
-        expected = [['a', 'US'],
-                    ['enPR', "mī-ăz'mə", "mē- ăz'mə"],
-                    ['IPA', '/maɪˈæzmə/', '/miˈæzmə/', 'lang=en']]
-        self.assertEqual(expected, templates)
 
 class TestWikitext(unittest.TestCase):
 
@@ -113,22 +90,23 @@ class TestWikitext(unittest.TestCase):
         )
         self.assertEqual(expected, filtered)
 
+    def test_get_templates(self):
+        text = ("* {{a|US}} {{enPR|mī-ăz'mə|mē- ăz'mə}}, "
+                "{{IPA|/maɪˈæzmə/|/miˈæzmə/|lang=en}}")
+        templates = wp.Wikitext(text).templates()
+        expected = [['a', 'US'],
+                    ['enPR', "mī-ăz'mə", "mē- ăz'mə"],
+                    ['IPA', '/maɪˈæzmə/', '/miˈæzmə/', 'lang=en']]
+        self.assertEqual(expected, templates)
+
+class TestWikitemplate(unittest.TestCase):
+
+    def test_parse(self):
+        '''Don't parse inner templates'''
+        text = '{{a|1|2|{{b|3|4}}}}'
+        template = wp.Wikitemplate.parse(text)
+        expected = ['a', '1', '2', '{{b|3|4}}']
+        self.assertEqual(expected, template)
 
 if __name__ == '__main__':
-    # temp setup to help testing
-    if 0:
-        folder = 'out/'
-        pron = wp.json_load(folder + 'pron.json')
-        ipa = wp.json_load(folder + 'ipa.json')
-        ipa_lenient = wp.json_load(folder + 'ipa_lenient.json')
-        hit, miss = wp.map_filter_dict(get_ipa_test, pron)
-        diff_lenient = {k: pron[k] for k in ipa_lenient.keys()
-                        if k not in hit or len(ipa_lenient[k]) > len(hit[k])}
-        diff_prev = {k: pron[k] for k in ipa.keys()
-                     if k not in hit or len(ipa[k]) > len(hit[k])}
-        wp.json_dump(hit, 'test/hit.tmp.json')
-        #wp.json_dump(miss, 'test/miss.tmp.json')
-        wp.json_dump(diff_lenient, 'test/diff_lenient.tmp.json')
-        wp.json_dump(diff_prev, 'test/diff_prev.tmp.json')
-    else:
-        unittest.main()
+    unittest.main()
