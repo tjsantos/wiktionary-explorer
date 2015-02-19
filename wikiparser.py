@@ -4,6 +4,58 @@ import re
 import string
 import sys
 
+class Wikitext(str):
+    '''A string with extra helper methods to process wikitext'''
+
+    def filter_sections(self, *args):
+        r'''Return a new `Wikitext`, filtered by case-insensitive section titles in the order of the
+        given `*args` strings. Return an empty `Wikitext` if no matches.
+
+        >>> wt = Wikitext(
+        ...     '==English==\n'
+        ...     '===Pronunciation===\n'
+        ...     '* /english ipa/\n'
+        ...     '==French==\n'
+        ...     '===Pronunciation===\n'
+        ...     '* /french ipa/\n'
+        ... )
+        >>> wt.filter_sections('english', 'pronunciation')
+        '===Pronunciation===\n* /english ipa/\n'
+        '''
+
+        if not args or not self:
+            return Wikitext(self)
+        lines = self.splitlines(keepends=True)
+
+        # find the line that starts the section, and the corresponding header level
+        for i, line in enumerate(lines):
+            section_title = line.strip('=' + string.whitespace).lower()
+            if section_title == args[0]:
+                level = self.heading_level(line)
+                break
+        else:
+            i = 0 # default if empty lines
+
+        # the section ends at the next matching header level
+        for j in range(i+1, len(lines)):
+            if self.heading_level(lines[j]) == level:
+                break
+        else:
+            j = len(lines) # default
+
+        filtered = ''.join(lines[i:j])
+        return Wikitext(filtered).filter_sections(*args[1:])
+
+    @classmethod
+    def heading_level(cls, s):
+        count = 0
+        for c in s.lstrip():
+            if c == '=':
+                count += 1
+            else:
+                break
+        return count
+
 def parse_xml_to_json(infile, outfile):
     import xml.etree.ElementTree as ET
     def recursive_clear(elem):
