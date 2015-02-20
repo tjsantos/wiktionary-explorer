@@ -27,27 +27,34 @@ class Wikitext(str):
             return Wikitext(self)
         lines = self.splitlines(keepends=True)
 
-        # find the line that starts the section, and the corresponding header level
-        for i, line in enumerate(lines):
-            section_title = line.strip('=' + string.whitespace).lower()
-            if section_title == args[0]:
-                level = self.heading_level(line)
-                break
-        else:
-            i = 0 # default if empty lines
+        filtered = ''
+        i = 0
+        while i < len(lines):
+            # find the line that starts the section, and the corresponding header level
+            while i < len(lines):
+                section_title = lines[i].strip('=' + string.whitespace).lower()
+                if section_title == args[0]:
+                    level = self.heading_level(lines[i])
+                    # section starts at lines[i]
+                    break
+                i += 1
 
-        # the section ends at the next matching header level
-        for j in range(i+1, len(lines)):
-            if self.heading_level(lines[j]) == level:
-                break
-        else:
-            j = len(lines) # default
+            # the section ends when the next header level is less than or equal to initial level
+            for j in range(i+1, len(lines)):
+                if 0 < self.heading_level(lines[j]) <= level:
+                    # section ends at lines[j]
+                    break
+            else:
+                j = len(lines) # default
 
-        filtered = ''.join(lines[i:j])
+            filtered += ''.join(lines[i:j])
+            i = j
+        # recursive filter on the rest of the arguments
         return Wikitext(filtered).filter_sections(*args[1:])
 
     @classmethod
     def heading_level(cls, s):
+        '''Return 0 if `s` is not a heading.'''
         count = 0
         for c in s.lstrip():
             if c == '=':
