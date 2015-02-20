@@ -56,12 +56,19 @@ class Wikitext(str):
                 break
         return count
 
-    def templates(self):
-        """Return a list of top level templates found in the given wikitext."""
-        templates = []
+    def tokenize_templates(self):
+        '''Return a list of tokens from the wikitext, classified as either templates or strings
+        (non-templates)
+        '''
+        tokens = []
         i = 0
+        start_token = 0
         while i < len(self):
             if self[i:i+2] == '{{':
+                # add the last token
+                if i > start_token:
+                    tokens.append(self[start_token:i])
+                # find matching bracket
                 nested = 1
                 j = i + 2
                 while nested and j < len(self):
@@ -73,13 +80,49 @@ class Wikitext(str):
                         j += 2
                     else:
                         j += 1
+                # parse template and add it to the list
                 if not nested:
-                    # found a valid template
-                    templates.append(Wikitemplate.parse(self[i:j]))
+                    tokens.append(Wikitemplate.parse(self[i:j]))
                 i = j
+                start_token = j
             else:
                 i += 1
-        return templates
+        if i > start_token:
+            tokens.append(self[start_token:i])
+        return tokens
+
+    # TODO: refactor template parser
+
+    def extract_pronunciation(self):
+        '''Return JSON serializable IPA and audio information.
+
+        {'ipa': [{'ipa': /example/, 'accent': 'GB'}, ...],
+         'audio': [{'filename': 'En-us-example.ogg', 'accent': ''}, ...]}
+        '''
+        ipa_results = []
+        audio_results = []
+        for line in self.splitlines():
+            accents = ['']
+            templates = (t for t in Wikitext.tokenize_templates(line)
+                         if isinstance(t, Wikitemplate))
+            for t in templates:
+                if t.name == 'a':
+                    accents = [normalize_accent(a) for a in t.args]
+                if 'IPA' in t.name:
+                    for ipa in t.extract_ipa_list():
+                        for accent in accents:
+                            ipa_results.append({'ipa': ipa, 'accent': accent})
+                if 'audio' in t.name:
+                    for accent in accents:
+                        audio_results.append({
+                            'filename': normalize_filename(t.args[0]),
+                            'accent': accent or normalize_accent(t.args[1])
+                        })
+        return {'ipa': ipa_results, 'audio': audio_results}
+
+    def extract_ipa_lenient(self):
+        '''Return a list of all results enclosed by "/".'''
+        return re.findall(r'/[^/]+/', self)
 
 class Wikitemplate(list):
     '''A wikitemplate is a list whose first element is its name and the rest are its arguments'''
@@ -111,7 +154,7 @@ class Wikitemplate(list):
         for i in range(len(separator_indices) - 1):
             start = 1 + separator_indices[i]
             end = separator_indices[i+1]
-            token = s[start:end]
+            token = s[start:end].strip()
             tokens.append(token)
 
         return cls(tokens)
@@ -126,6 +169,19 @@ class Wikitemplate(list):
     @property
     def args(self):
         return self[1:]
+
+    def extract_ipa_list(self):
+        if 'IPA' not in self.name:
+            return []
+        ipa_list = []
+        re_ipa = r'/.+?/' # non-greedy match of first result enclosed by '/'
+        for arg in self.args:
+            # obtain first match in each arg
+            match = re.search(re_ipa, arg)
+            if match:
+                ipa_list.append(match.group())
+        return ipa_list
+
 
 def parse_xml_to_json(infile, outfile):
     import xml.etree.ElementTree as ET
@@ -177,25 +233,6 @@ def parse_xml_to_json(infile, outfile):
     print('errors:', errors)
     return len(words)
 
-def get_ipa(wikitext):
-    """return a list of IPA's found"""
-    # match /slashes/ (phonemic transcriptions in IPA)
-    ipalist = []
-    re_ipa = r'/.*?/'
-    templates = get_templates(wikitext)
-    for template in templates:
-        if template.name in ('IPA', 'audio-IPA'):
-            for arg in template.args:
-                match = re.search(re_ipa, arg)
-                if match:
-                    ipalist.append(match.group())
-    return ipalist
-
-def get_ipa_lenient(wikitext):
-    reg = r'/[^/]+/'
-    ipalist = re.findall(reg, wikitext)
-    return ipalist
-
 def normalize_accent(accent):
     accents = {
         '': '',
@@ -205,15 +242,15 @@ def normalize_accent(accent):
         'Audio (U.S.A.)': 'US',
         'Audio (US, Northern California)': 'US',
         'Audio (Northern California, US)': 'US',
-        'Audio (UK)': 'UK',
+        'Audio (UK)': 'GB',
         'Audio (CA)': 'CA',
         'Audio (AUS)': 'AU',
         'Audio (Australia)': 'AU',
         'US': 'US',
         'GenAm': 'US',
-        'UK': 'UK',
-        'RP': 'UK',
-        'British': 'UK',
+        'UK': 'GB',
+        'RP': 'GB',
+        'British': 'GB',
         'Canada': 'CA',
         'CA': 'CA',
         'Australia': 'AU',
@@ -225,49 +262,11 @@ def normalize_accent(accent):
     }
     return accents[accent] if accent in accents else '--'
 
-def ipas_from_template(template):
-    ipas = []
-    re_ipa = r'/.+/'
-    for arg in template.args:
-        # obtain first match in each arg
-        match = re.search(re_ipa, arg)
-        if match:
-            ipas.append(match.group())
-    return ipas
-
-def parse_pron(wikitext):
-    '''Parse a pronunciation wikitext section into audio and ipa.'''
-    audio_list = []
-    ipa_list = []
-    for line in wikitext.splitlines():
-        templates = get_templates(line)
-        # grab accents from the first accent template, default: ''
-        accents = ['']
-        for t in templates:
-            if t.name == 'a':
-                accents = t.args
-                break
-        assert accents, 'Expected arguments in template: {}'.format(t)
-        # associate each template with the accent
-        for a in accents:
-            a = normalize_accent(a)
-            for t in templates:
-                if t.name == 'IPA':
-                    for ipa in ipas_from_template(t):
-                        ipa_list.append({'ipa': ipa, 'accent': a})
-                elif t.name == 'audio':
-                    # grab accent from audio template if not given
-                    if not a:
-                        a = normalize_accent(t.args[1])
-                    audio_list.append({'filename': t.args[0], 'accent': a})
-                elif t.name == 'audio-IPA':
-                    audio_list.append({'filename': t.args[0], 'accent': a})
-                    for ipa in ipas_from_template(t):
-                        ipa_list.append({'ipa': ipa, 'accent': a})
-                else:
-                    # TODO: log skipped templates?
-                    pass
-    return {'audio': audio_list, 'ipa': ipa_list}
+def normalize_filename(filename):
+    # capitalize first letter and replace blanks with underscores
+    filename = filename[0].upper() + filename[1:]
+    filename = filename.replace(' ', '_')
+    return filename
 
 def json_load(filename):
     """shortcut for json.load using a filename"""

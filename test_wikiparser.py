@@ -90,14 +90,19 @@ class TestWikitext(unittest.TestCase):
         )
         self.assertEqual(expected, filtered)
 
-    def test_get_templates(self):
+    def test_tokenize_templates(self):
         text = ("* {{a|US}} {{enPR|mī-ăz'mə|mē- ăz'mə}}, "
                 "{{IPA|/maɪˈæzmə/|/miˈæzmə/|lang=en}}")
-        templates = wp.Wikitext(text).templates()
-        expected = [['a', 'US'],
-                    ['enPR', "mī-ăz'mə", "mē- ăz'mə"],
-                    ['IPA', '/maɪˈæzmə/', '/miˈæzmə/', 'lang=en']]
-        self.assertEqual(expected, templates)
+        tokens = wp.Wikitext(text).tokenize_templates()
+        expected = [
+            '* ',
+            ['a', 'US'],
+            ' ',
+            ['enPR', "mī-ăz'mə", "mē- ăz'mə"],
+            ', ',
+            ['IPA', '/maɪˈæzmə/', '/miˈæzmə/', 'lang=en']
+        ]
+        self.assertEqual(expected, tokens)
 
 class TestWikitemplate(unittest.TestCase):
 
