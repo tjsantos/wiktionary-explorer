@@ -116,6 +116,25 @@ class TestWikitext(unittest.TestCase):
         filtered = wp.Wikitext(text).filter_sections('pronunciation')
         self.assertEqual(expected, filtered)
 
+    def test_extract_IPA_skips_IPAchar(self):
+        text = (
+            '** {{a|UK}} {{enPR|yo\u035eo}}, {{audio-IPA|En-uk-you.ogg|/ju\u02d0/|lang=en}}\n'
+            '** {{a|US}} {{enPR|yo\u035eo}}, {{audio-IPA|en-us-you.ogg|/ju/|lang=en}}\n'
+            '** {{a|US}} {{enPR|y\u0259}}, {{audio-IPA|en-us-you unstressed.ogg|/j\u0259/|lang=en}}\n'
+            'When a word ending in {{IPAchar|/t/}}, {{IPAchar|/d/}}, {{IPAchar|/s/}}, '
+            'or {{IPAchar|/z/}} is followed by {{term|you|lang=en}}, '
+            'these may coalesce with the {{IPAchar|/j/}}, resulting in {{IPAchar|/t\u0283/}}, '
+            '{{IPAchar|/d\u0292/}}, {{IPAchar|/\u0283/}} and {{IPAchar|/\u0292/}}, respectively. '
+        )
+        expected_ipa = [
+            {'ipa': '/ju\u02d0/', 'accent': 'GB'},
+            {'ipa': '/ju/', 'accent': 'US'},
+            {'ipa': '/j\u0259/', 'accent': 'US'}
+        ]
+        pron = wp.Wikitext(text).extract_pronunciation()
+        result_ipa = pron['ipa']
+        self.assertEqual(expected_ipa, result_ipa)
+
     def test_filter_language_examples(self):
         for word, text in self.examples.items():
             if 'text' in text and 'lang' in text:
@@ -132,6 +151,16 @@ class TestWikitext(unittest.TestCase):
                 with self.subTest(word=word, comment=comment):
                     expected = text['pron']
                     result = wp.Wikitext(text['lang']).filter_sections('pronunciation')
+                    self.assertEqual(expected, result)
+
+    def test_extract_ipa_examples(self):
+        for word, text in self.examples.items():
+            if 'pron' in text and 'ipa' in text:
+                comment = text['comment'] if 'comment' in text else None
+                with self.subTest(word=word, comment=comment):
+                    expected = text['ipa']
+                    pron = wp.Wikitext(text['pron']).extract_pronunciation()
+                    result = list(ipa_object['ipa'] for ipa_object in pron['ipa'])
                     self.assertEqual(expected, result)
 
     def test_tokenize_templates(self):

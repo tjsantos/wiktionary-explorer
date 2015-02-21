@@ -115,7 +115,7 @@ class Wikitext(str):
             for t in templates:
                 if t.name == 'a':
                     accents = [normalize_accent(a) for a in t.args]
-                if 'IPA' in t.name:
+                if t.name in Wikitemplate.IPA_templates:
                     for ipa in t.extract_ipa_list():
                         for accent in accents:
                             ipa_results.append({'ipa': ipa, 'accent': accent})
@@ -133,6 +133,8 @@ class Wikitext(str):
 
 class Wikitemplate(list):
     '''A wikitemplate is a list whose first element is its name and the rest are its arguments'''
+
+    IPA_templates = ('IPA', 'audio-IPA', 'audio-pron')
 
     @classmethod
     def parse(cls, s):
@@ -178,7 +180,7 @@ class Wikitemplate(list):
         return self[1:]
 
     def extract_ipa_list(self):
-        if 'IPA' not in self.name:
+        if self.name not in self.IPA_templates:
             return []
         ipa_list = []
         re_ipa = r'/.+?/' # non-greedy match of first result enclosed by '/'
@@ -267,7 +269,7 @@ def normalize_accent(accent):
         'NZ': 'NZ',
         'Ireland': 'IE'
     }
-    return accents[accent] if accent in accents else '--'
+    return accents[accent] if accent in accents else ''
 
 def normalize_filename(filename):
     # capitalize first letter and replace blanks with underscores
