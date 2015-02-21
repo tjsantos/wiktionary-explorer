@@ -19,6 +19,8 @@ class TestFunctions(unittest.TestCase):
 
 class TestWikitext(unittest.TestCase):
 
+    # NOTE: this test fixture should slowly be phased out.
+    # when possible, rewrite into minimal test cases that capture behavior
     @classmethod
     def setUpClass(cls):
         """set up wikitext examples with expected output for each parser step.
@@ -30,6 +32,34 @@ class TestWikitext(unittest.TestCase):
         """
         # examples = {'word': {'text': ..., 'lang': ...}, 'word2': {...}}
         cls.examples = wp.json_load('test/wikitext_examples.json')
+
+    def test_filter_language_examples(self):
+        for word, text in self.examples.items():
+            if 'text' in text and 'lang' in text:
+                comment = text['comment'] if 'comment' in text else None
+                with self.subTest(word=word, comment=comment):
+                    expected = text['lang']
+                    result = wp.Wikitext(text['text']).filter_sections('english')
+                    self.assertEqual(expected, result)
+
+    def test_filter_pronunciation_examples(self):
+        for word, text in self.examples.items():
+            if 'pron' in text and 'lang' in text:
+                comment = text['comment'] if 'comment' in text else None
+                with self.subTest(word=word, comment=comment):
+                    expected = text['pron']
+                    result = wp.Wikitext(text['lang']).filter_sections('pronunciation')
+                    self.assertEqual(expected, result)
+
+    def test_extract_ipa_examples(self):
+        for word, text in self.examples.items():
+            if 'pron' in text and 'ipa' in text:
+                comment = text['comment'] if 'comment' in text else None
+                with self.subTest(word=word, comment=comment):
+                    expected = text['ipa']
+                    pron = wp.Wikitext(text['pron']).extract_pronunciation()
+                    result = list(ipa_object['ipa'] for ipa_object in pron['ipa'])
+                    self.assertEqual(expected, result)
 
     def test_filter_sections(self):
         # don't naively count '=' to determine heading level
@@ -131,34 +161,6 @@ class TestWikitext(unittest.TestCase):
         self.assertGreater(len(ipa_lenient), 32000)
         self.assertGreater(len(ipa), 32000)
         self.assertGreater(len(ipa_diff), 500)
-
-    def test_filter_language_examples(self):
-        for word, text in self.examples.items():
-            if 'text' in text and 'lang' in text:
-                comment = text['comment'] if 'comment' in text else None
-                with self.subTest(word=word, comment=comment):
-                    expected = text['lang']
-                    result = wp.Wikitext(text['text']).filter_sections('english')
-                    self.assertEqual(expected, result)
-
-    def test_filter_pronunciation_examples(self):
-        for word, text in self.examples.items():
-            if 'pron' in text and 'lang' in text:
-                comment = text['comment'] if 'comment' in text else None
-                with self.subTest(word=word, comment=comment):
-                    expected = text['pron']
-                    result = wp.Wikitext(text['lang']).filter_sections('pronunciation')
-                    self.assertEqual(expected, result)
-
-    def test_extract_ipa_examples(self):
-        for word, text in self.examples.items():
-            if 'pron' in text and 'ipa' in text:
-                comment = text['comment'] if 'comment' in text else None
-                with self.subTest(word=word, comment=comment):
-                    expected = text['ipa']
-                    pron = wp.Wikitext(text['pron']).extract_pronunciation()
-                    result = list(ipa_object['ipa'] for ipa_object in pron['ipa'])
-                    self.assertEqual(expected, result)
 
     def test_tokenize_templates(self):
         text = ("* {{a|US}} {{enPR|mī-ăz'mə|mē- ăz'mə}}, "
