@@ -3,8 +3,7 @@ import unittest
 import os
 import json
 
-class TestParser(unittest.TestCase):
-
+class TestFunctions(unittest.TestCase):
 
     @unittest.skip('will not be using until refactor or next data dump')
     def test_xml_to_wikitext(self):
@@ -15,43 +14,8 @@ class TestParser(unittest.TestCase):
         words_expected = 19
         self.assertEqual(words_found, words_expected)
 
-    def _test_examples_parse_step(self, from_label, to_label):
-        """helper method to test specific parse steps"""
-        step_names = ['text', 'lang', 'pron', 'ipa']
-        self.assertIn(from_label, step_names)
-        self.assertIn(to_label, step_names)
-        map_functions = {'lang': wp.get_english,
-                         'pron': wp.get_pronunciation,
-                         'ipa': wp.get_ipa}
-        mapper = map_functions[to_label]
-        # obtain only the relevant examples for the given parse step
-        examples = ((word, text) for word, text in self.examples.items() if
-                    from_label in text and to_label in text)
-        for word, text in examples:
-            comment = text['comment'] if 'comment' in text else None
-            with self.subTest(word=word, comment=comment,
-                              step=(from_label, to_label)):
-                result = mapper(text[from_label])
-                expected = text[to_label]
-                if from_label == 'text':
-                    # full text is long so assert on length first
-                    self.assertEqual(len(result), len(expected))
-                self.assertEqual(result, expected)
-
-    @unittest.skip('refactoring')
-    def test_extract_ipa(self):
-        self._test_examples_parse_step('pron', 'ipa')
-
-        pronunciation = wp.json_load('test/pron.json')
-        self.assertGreater(len(pronunciation), 45000)
-
-        ipa, no_ipa = wp.map_filter_dict(get_ipa, pronunciation)
-        ipa_lenient, _ = wp.map_filter_dict(get_ipa_lenient, pronunciation)
-        ipa_diff = {k: pronunciation[k] for k in ipa_lenient.keys()
-                    if k not in ipa or len(ipa_lenient[k]) > len(ipa[k])}
-        self.assertGreater(len(ipa_lenient), 32000)
-        self.assertGreater(len(ipa), 32000)
-        self.assertGreater(len(ipa_diff), 500)
+    def test_normalize_filename_empty_input(self):
+        self.assertEqual('', wp.normalize_filename(''))
 
 class TestWikitext(unittest.TestCase):
 
@@ -116,7 +80,7 @@ class TestWikitext(unittest.TestCase):
         filtered = wp.Wikitext(text).filter_sections('pronunciation')
         self.assertEqual(expected, filtered)
 
-    def test_extract_IPA_skips_IPAchar(self):
+    def test_extract_ipa_skips_ipachar(self):
         text = (
             '** {{a|UK}} {{enPR|yo\u035eo}}, {{audio-IPA|En-uk-you.ogg|/ju\u02d0/|lang=en}}\n'
             '** {{a|US}} {{enPR|yo\u035eo}}, {{audio-IPA|en-us-you.ogg|/ju/|lang=en}}\n'
@@ -134,6 +98,39 @@ class TestWikitext(unittest.TestCase):
         pron = wp.Wikitext(text).extract_pronunciation()
         result_ipa = pron['ipa']
         self.assertEqual(expected_ipa, result_ipa)
+
+    def test_extract_ipa_skips_brackets(self):
+        text = '* {{a|UK}} {{IPA|[\u02c8d\u026ad\u0259\u026b]|lang=en}}\n'
+        extracted_pron = wp.Wikitext(text).extract_pronunciation()
+        self.assertNotIn('ipa', extracted_pron)
+
+    def test_extract_ipa_skips_links(self):
+        text = '[http://www.wordreference.com/definition/pecan pecan]'
+        extracted_pron = wp.Wikitext(text).extract_pronunciation()
+        self.assertNotIn('ipa', extracted_pron)
+
+    # NOTE: long test
+    def test_extract_ipa_meets_threshold(self):
+        pronunciation = wp.json_load('test/pron.json')
+        self.assertGreater(len(pronunciation), 45000)
+
+        # dictionaries from words to lists of ipa
+        ipa = {}
+        ipa_lenient = {}
+        for word, pron_section in pronunciation.items():
+            pron_info = wp.Wikitext(pron_section).extract_pronunciation()
+            if 'ipa' in pron_info:
+                ipa[word] = pron_info['ipa']
+
+            ipa_lenient_results = wp.Wikitext(pron_section).extract_ipa_lenient()
+            if ipa_lenient_results:
+                ipa_lenient[word] = ipa_lenient_results
+
+        ipa_diff = {k: pronunciation[k] for k in ipa_lenient.keys()
+                    if k not in ipa or len(ipa_lenient[k]) > len(ipa[k])}
+        self.assertGreater(len(ipa_lenient), 32000)
+        self.assertGreater(len(ipa), 32000)
+        self.assertGreater(len(ipa_diff), 500)
 
     def test_filter_language_examples(self):
         for word, text in self.examples.items():

@@ -125,7 +125,12 @@ class Wikitext(str):
                             'filename': normalize_filename(t.args[0]),
                             'accent': accent or normalize_accent(t.args[1])
                         })
-        return {'ipa': ipa_results, 'audio': audio_results}
+        results = {}
+        if ipa_results:
+            results['ipa'] = ipa_results
+        if audio_results:
+            results['audio'] = audio_results
+        return results
 
     def extract_ipa_lenient(self):
         '''Return a list of all results enclosed by "/".'''
@@ -273,8 +278,9 @@ def normalize_accent(accent):
 
 def normalize_filename(filename):
     # capitalize first letter and replace blanks with underscores
-    filename = filename[0].upper() + filename[1:]
-    filename = filename.replace(' ', '_')
+    if filename:
+        filename = filename[0].upper() + filename[1:]
+        filename = filename.replace(' ', '_')
     return filename
 
 def json_load(filename):
